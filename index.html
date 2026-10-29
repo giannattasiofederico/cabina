@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Cabina — Glossari</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230d1117'/%3E%3Ccircle cx='28' cy='28' r='14' fill='none' stroke='%23f0b429' stroke-width='6'/%3E%3Cpath d='M38 38 L52 52' stroke='%23f0b429' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --line:#30363d;
+    --txt:#e6edf3; --dim:#8b949e; --accent:#f0b429; --accent2:#58a6ff;
+    --pin:#f0b429; --ok:#3fb950;
+    --fs:17px;      /* corpo testo */
+    --qfs:1.5rem;   /* barra ricerca: dimensione */
+    --qpad:16px;    /* barra ricerca: altezza */
+    --rowpad:9px;   /* densità righe */
+    --cols:52px repeat(4,1fr); /* ricalcolato secondo le lingue visibili */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--txt); font-size:var(--fs);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  /* ---------- barra alta ---------- */
+  header{padding:10px 14px 0;flex:0 0 auto}
+  .toolrow{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  select,button,input{font-family:inherit;font-size:.9rem;color:var(--txt)}
+  select,.btn{
+    background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+    padding:7px 11px;cursor:pointer
+  }
+  .btn:hover,select:hover{border-color:var(--accent2)}
+  .btn.on{border-color:var(--accent);color:var(--accent)}
+  .spacer{flex:1}
+  .count{color:var(--dim);font-size:.82rem;white-space:nowrap}
+
+  #q{
+    width:100%;background:var(--panel);border:2px solid var(--line);border-radius:10px;
+    padding:var(--qpad) 18px;font-size:var(--qfs);font-weight:600;letter-spacing:.3px;outline:none
+  }
+  #q:focus{border-color:var(--accent)}
+  #q::placeholder{color:#4d5866;font-weight:400}
+
+  /* ---------- corpo ---------- */
+  main{flex:1;overflow-y:auto;padding:12px 14px 40px}
+  .sechead{
+    font-size:.7rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--dim);
+    margin:14px 0 6px;display:flex;align-items:center;gap:8px
+  }
+  .sechead::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .row{
+    display:grid;grid-template-columns:var(--cols);gap:10px;align-items:start;
+    padding:var(--rowpad) 8px;border-bottom:1px solid var(--line);border-radius:6px
+  }
+  .row:hover{background:var(--panel)}
+  .row.pinned{background:rgba(240,180,41,.07);border-bottom-color:rgba(240,180,41,.25)}
+  .cell{line-height:1.35;word-break:break-word;min-width:0}
+  .cell .lang{
+    display:block;font-size:.6rem;letter-spacing:1.2px;color:var(--dim);
+    text-transform:uppercase;margin-bottom:2px
+  }
+  .cell.empty{color:#3d4653}
+  .note{
+    grid-column:2/-1;color:var(--dim);font-size:.8rem;font-style:italic;
+    margin-top:4px;padding-left:2px
+  }
+  mark{background:rgba(240,180,41,.32);color:var(--accent);border-radius:2px;padding:0 1px}
+  .rowbtns{display:flex;gap:2px;margin-top:11px}
+  .pinbtn{
+    background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;
+    color:#39414d;padding:2px
+  }
+  .pinbtn:hover{color:var(--pin)}
+  .row.pinned .pinbtn[data-pin]{color:var(--pin)}
+  .pinbtn[data-edit]{font-size:.85rem}
+  .pinbtn[data-edit]:hover{color:var(--accent2)}
+  body.nolabels .cell .lang{display:none}
+  body.nolabels .rowbtns{margin-top:0}
+
+  /* ---------- riga in modifica ---------- */
+  .row.editing{
+    display:block;background:var(--panel2);border:1px solid var(--accent);
+    border-radius:8px;padding:12px;margin:6px 0
+  }
+  .row.editing .edithead{
+    font-size:.68rem;text-transform:uppercase;letter-spacing:1.3px;
+    color:var(--accent);margin-bottom:9px
+  }
+  .row.editing input{
+    width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:9px 10px;outline:none;font-size:.95rem;color:var(--txt);font-family:inherit
+  }
+  .row.editing input:focus{border-color:var(--accent)}
+  .row.editing .fld{margin-bottom:7px}
+  .row.editing .fld span{
+    display:block;font-size:.6rem;letter-spacing:1.2px;color:var(--dim);
+    text-transform:uppercase;margin-bottom:3px
+  }
+  .row.editing .flds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .editact{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  .danger{border-color:#6e2b28!important;color:#f85149!important}
+  .danger:hover{border-color:#f85149!important}
+  @media(max-width:820px){ .row.editing .flds{grid-template-columns:1fr 1fr} }
+
+  .empty-state{text-align:center;color:var(--dim);padding:60px 20px;line-height:1.8}
+  .empty-state kbd{
+    background:var(--panel2);border:1px solid var(--line);border-radius:4px;
+    padding:2px 7px;font-size:.85em
+  }
+
+  /* ---------- pannelli a scomparsa ---------- */
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:14px;margin-bottom:10px
+  }
+  .panel[hidden]{display:none}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+  .panel input[type=text],.panel textarea{
+    width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:9px 10px;outline:none;font-size:.95rem
+  }
+  .panel input:focus,.panel textarea:focus{border-color:var(--accent)}
+  .panel textarea{min-height:150px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem;resize:vertical}
+  .panel .hint{color:var(--dim);font-size:.78rem;margin:0 0 9px;line-height:1.5}
+  .panel .actions{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center}
+  .msg{color:var(--ok);font-size:.82rem}
+  .msg.err{color:#f85149}
+
+  /* ---------- pannello layout ---------- */
+  .setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px 20px}
+  .set label{display:block;font-size:.78rem;color:var(--dim);margin-bottom:6px}
+  .set label b{color:var(--txt);font-weight:600}
+  .set input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:6px 12px;cursor:pointer;font-size:.85rem;color:var(--dim);user-select:none
+  }
+  .chip.on{border-color:var(--accent);color:var(--accent);background:rgba(240,180,41,.09)}
+  .setfoot{
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--line)
+  }
+
+  @media(max-width:820px){
+    .row:not(.editing){grid-template-columns:52px 1fr;gap:4px}
+    .grid4{grid-template-columns:1fr 1fr}
+  }
+
+  /* ---------- telefono e tablet (app installata) ---------- */
+  header{padding-top:max(10px, env(safe-area-inset-top))}
+  header,main{padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right))}
+  main{padding-bottom:max(40px, env(safe-area-inset-bottom))}
+  @media(max-width:820px){
+    /* una sola riga di pulsanti che scorre di lato, invece di tre righe che rubano spazio */
+    .toolrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+    .toolrow::-webkit-scrollbar{display:none}
+    .toolrow > *{flex:0 0 auto}
+    #gsel{max-width:62vw}
+    .toolrow .spacer{display:none}
+    /* le lingue una sotto l'altra, tutte nella colonna di destra: i pulsanti restano a sinistra */
+    .row:not(.editing) .cell,.row:not(.editing) .note{grid-column:2}
+  }
+  @media(pointer:coarse){
+    /* sotto i 16px iOS ingrandisce la pagina quando si tocca un campo */
+    select,button,input,textarea,.row.editing input,.panel input[type=text]{font-size:16px}
+    .btn,select{padding:9px 13px}
+    .pinbtn{font-size:1.25rem;padding:6px 8px}
+    .pinbtn[data-edit]{font-size:1.1rem}
+    .rowbtns{margin-top:4px}
+    .row:hover{background:none}
+    .row.pinned:hover{background:rgba(240,180,41,.07)}
+  }
+  /* ☆ e ✎ ingranditi per il dito non stanno in 52px */
+  @media(pointer:coarse) and (max-width:820px){
+    .row:not(.editing){grid-template-columns:80px 1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="toolrow">
+    <select id="gsel" title="Glossario attivo"></select>
+    <button class="btn" id="bNew" title="Nuovo glossario">+ glossario</button>
+    <button class="btn" id="bAdd">+ termine</button>
+    <button class="btn" id="bImp">Importa</button>
+    <button class="btn" id="bExp">Esporta</button>
+    <button class="btn" id="bBak" title="Backup completo di tutti i glossari: per passarli dal PC al telefono">Backup</button>
+    <button class="btn" id="bDir" title="Apri la cartella dei dati e dei backup" hidden>📁 Dati</button>
+    <button class="btn" id="bDel" title="Elimina glossario attivo">🗑</button>
+    <div class="spacer"></div>
+    <button class="btn" id="bSml" title="Riduci testo">A−</button>
+    <button class="btn" id="bBig" title="Ingrandisci testo">A+</button>
+    <button class="btn" id="bSet" title="Layout">⚙</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <!-- layout -->
+  <div class="panel" id="pSet" hidden>
+    <div class="setgrid">
+      <div class="set">
+        <label>Barra di ricerca — <b><span id="vQ">1.5</span>×</b></label>
+        <input type="range" id="sQ" min="9" max="26" step="1">
+      </div>
+      <div class="set">
+        <label>Testo del glossario — <b><span id="vFs">17</span> px</b></label>
+        <input type="range" id="sFs" min="13" max="28" step="1">
+      </div>
+      <div class="set">
+        <label>Densità righe — <b><span id="vRp">9</span> px</b></label>
+        <input type="range" id="sRp" min="2" max="20" step="1">
+      </div>
+      <div class="set">
+        <label>Lingue visibili</label>
+        <div class="chips" id="langChips"></div>
+      </div>
+    </div>
+    <div class="setfoot">
+      <button class="chip" id="cLab">Etichette IT/PT/EN/ES</button>
+      <div class="spacer"></div>
+      <button class="btn" id="setReset">Ripristina</button>
+      <button class="btn" id="setClose">Chiudi <span style="color:var(--dim)">Esc</span></button>
+    </div>
+    <p class="hint" style="margin:10px 0 0">
+      Le lingue nascoste vengono escluse anche dalla ricerca: se in questa cabina non lavori
+      verso lo spagnolo, spegnilo e i risultati restano puliti.
+    </p>
+  </div>
+
+  <!-- aggiunta rapida -->
+  <div class="panel" id="pAdd" hidden>
+    <div class="grid4">
+      <input type="text" id="a_it" placeholder="Italiano" autocomplete="off">
+      <input type="text" id="a_pt" placeholder="Português" autocomplete="off">
+      <input type="text" id="a_en" placeholder="English" autocomplete="off">
+      <input type="text" id="a_es" placeholder="Español" autocomplete="off">
+    </div>
+    <input type="text" id="a_note" placeholder="Nota / contesto (facoltativo)" autocomplete="off">
+    <div class="actions">
+      <button class="btn" id="aSave">Salva <span style="color:var(--dim)">↵</span></button>
+      <button class="btn" id="aClose">Chiudi <span style="color:var(--dim)">Esc</span></button>
+      <span class="msg" id="aMsg"></span>
+    </div>
+  </div>
+
+  <!-- import -->
+  <div class="panel" id="pImp" hidden>
+    <p class="hint">
+      Incolla dal foglio di calcolo (Ctrl+C da Excel/Google Sheets) o un CSV.<br>
+      Colonne attese, in quest'ordine: <b>IT · PT · EN · ES · nota</b> — le mancanti restano vuote.<br>
+      Se la prima riga contiene intestazioni tipo "italiano/português/english/español" viene riconosciuta e saltata.
+    </p>
+    <textarea id="impTxt" placeholder="cauzione&#9;caução&#9;bail&#9;fianza&#9;penale&#10;riciclaggio&#9;branqueamento&#9;money laundering&#9;blanqueo&#9;"></textarea>
+    <div class="actions">
+      <button class="btn" id="impGo">Importa nel glossario attivo</button>
+      <button class="btn" id="impNew">Importa in un nuovo glossario</button>
+      <button class="btn" id="impClose">Chiudi</button>
+      <span class="msg" id="impMsg"></span>
+    </div>
+  </div>
+
+  <!-- backup completo -->
+  <div class="panel" id="pBak" hidden>
+    <p class="hint">
+      Un unico file con <b>tutti</b> i glossari, voci fissate comprese. Serve a passarli dal PC al telefono e viceversa.<br>
+      Si può importare anche direttamente il file <b>glossari.json</b> dell'app desktop (Documenti\CabinaGlossari).<br>
+      <b>Aggiorna</b> sostituisce i glossari con lo stesso nome interno e aggiunge quelli nuovi; gli altri restano.
+      <b>Sostituisci tutto</b> cancella quello che c'è qui e mette il contenuto del file.
+    </p>
+    <div class="actions">
+      <button class="btn" id="bakExp">Esporta backup</button>
+      <button class="btn" id="bakMerge">Importa: aggiorna</button>
+      <button class="btn danger" id="bakReplace">Importa: sostituisci tutto</button>
+      <button class="btn" id="bakClose">Chiudi</button>
+      <span class="msg" id="bakMsg"></span>
+    </div>
+    <input type="file" id="bakFile" accept=".json,application/json" hidden>
+  </div>
+
+  <input type="text" id="q" placeholder="Cerca in tutte le lingue…  ( / per tornare qui )"
+         autocomplete="off" autocorrect="off" spellcheck="false">
+</header>
+
+<main id="out"></main>
+
+<script>
+"use strict";
+const LANGS = ["it","pt","en","es"];
+const LABEL = {it:"IT",pt:"PT",en:"EN",es:"ES"};
+const KEY  = "cabina_glossari_v1";
+const SKEY = "cabina_layout_v1";
+
+// In Electron il preload fornisce un archivio su file (window.__cabinaStore);
+// aprendo l'HTML nel browser si ripiega su localStorage. Stessa interfaccia.
+const store = (typeof window !== "undefined" && window.__cabinaStore)
+  ? window.__cabinaStore : window.localStorage;
+
+let db = load();
+
+// Durante l'avvio non si salva mai: aprire l'app è sola lettura, così una
+// lettura andata a vuoto non può sovrascrivere i dati esistenti con un vuoto.
+let booting = true;
+
+/* ---------- impostazioni layout ---------- */
+const DEFAULTS = {q:15, fs:17, rowpad:9, labels:true, langs:{it:true,pt:true,en:true,es:true}};
+let cfg = loadCfg();
+
+function loadCfg(){
+  try{
+    const c = JSON.parse(store.getItem(SKEY));
+    if(c && typeof c === "object"){
+      const merged = Object.assign({}, DEFAULTS, c);
+      merged.langs = Object.assign({}, DEFAULTS.langs, c.langs || {});
+      // almeno una lingua deve restare accesa
+      if(!LANGS.some(L => merged.langs[L])) merged.langs = Object.assign({}, DEFAULTS.langs);
+      return merged;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function saveCfg(){ if(booting) return; try{ store.setItem(SKEY, JSON.stringify(cfg)); }catch(e){} }
+
+function visLangs(){ return LANGS.filter(L => cfg.langs[L]); }
+
+function applyCfg(){
+  const r = document.documentElement.style;
+  r.setProperty("--qfs", (cfg.q/10) + "rem");
+  r.setProperty("--qpad", Math.round(cfg.q * 1.05) + "px");
+  r.setProperty("--fs", cfg.fs + "px");
+  r.setProperty("--rowpad", cfg.rowpad + "px");
+  r.setProperty("--cols", "52px repeat(" + visLangs().length + ",1fr)");
+  document.body.classList.toggle("nolabels", !cfg.labels);
+  saveCfg();
+}
+
+function load(){
+  try{
+    const raw = store.getItem(KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d && Array.isArray(d.glossaries) && d.glossaries.length) return d;
+    }
+  }catch(e){}
+  return {active:"g1", glossaries:[{id:"g1", name:"Glossario 1", terms:[]}]};
+}
+// sul telefono lo spazio del browser è limitato: se il salvataggio fallisce lo dico, una volta
+let saveWarned = false;
+function save(){
+  if(booting) return;
+  try{ store.setItem(KEY, JSON.stringify(db)); saveWarned = false; }
+  catch(e){
+    if(!saveWarned){
+      saveWarned = true;
+      alert("Attenzione: le modifiche NON sono state salvate (spazio esaurito sul dispositivo?).\nEsporta un backup prima di chiudere.");
+    }
+  }
+}
+function uid(){ return "x" + Math.random().toString(36).slice(2,10); }
+function active(){
+  return db.glossaries.find(g => g.id === db.active) || db.glossaries[0];
+}
+
+/* ---------- normalizzazione: accenti via, minuscolo ---------- */
+function norm(s){
+  return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+}
+
+/* ---------- parser CSV/TSV con supporto virgolette ---------- */
+function parseTable(text){
+  const sep = (text.split("\n")[0].includes("\t")) ? "\t" : ",";
+  const rows = []; let row = [], cell = "", quoted = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(quoted){
+      if(c === '"'){
+        if(text[i+1] === '"'){ cell += '"'; i++; }
+        else quoted = false;
+      } else cell += c;
+    } else if(c === '"'){ quoted = true; }
+      else if(c === sep){ row.push(cell); cell = ""; }
+      else if(c === "\n"){ row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if(c !== "\r"){ cell += c; }
+  }
+  row.push(cell); rows.push(row);
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+
+const HEADER_WORDS = /^(it|ita|italiano|pt|por|portugu|en|eng|english|inglese|es|spa|espa|spagnolo|nota|note|notes|commento)/i;
+function looksLikeHeader(r){
+  const filled = r.filter(c => c.trim());
+  return filled.length >= 2 && filled.every(c => HEADER_WORDS.test(c.trim()));
+}
+
+/* ---------- stato di modifica ---------- */
+let editId  = null;
+let editBuf = {it:"",pt:"",en:"",es:"",note:""};
+
+/* ---------- rendering ---------- */
+const out = document.getElementById("out");
+const q   = document.getElementById("q");
+
+function esc(s){
+  return (s||"").replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+}
+function highlight(text, needle){
+  const safe = esc(text);
+  if(!needle) return safe;
+  const nt = norm(text), nn = norm(needle);
+  const i = nt.indexOf(nn);
+  // gli indici combaciano perché NFD+strip conserva la posizione dei caratteri base
+  if(i < 0 || text.length !== nt.length) return safe;
+  return esc(text.slice(0,i)) + "<mark>" + esc(text.slice(i,i+needle.length)) + "</mark>" + esc(text.slice(i+needle.length));
+}
+
+function rowHTML(t, needle){
+  if(editId === t.id) return editHTML(t);
+  const cells = visLangs().map(L => {
+    const v = t[L] || "";
+    return `<div class="cell${v?"":" empty"}"><span class="lang">${LABEL[L]}</span>${v ? highlight(v,needle) : "—"}</div>`;
+  }).join("");
+  const note = t.note ? `<div class="note">${esc(t.note)}</div>` : "";
+  return `<div class="row${t.pinned?" pinned":""}" data-id="${t.id}">
+      <div class="rowbtns">
+        <button class="pinbtn" data-pin="${t.id}" title="Fissa in alto">${t.pinned?"★":"☆"}</button>
+        <button class="pinbtn" data-edit="${t.id}" title="Modifica questa voce">✎</button>
+      </div>
+      ${cells}${note}
+    </div>`;
+}
+
+/* --- riga aperta in modifica: mostra sempre tutte e 4 le lingue,
+       anche quelle nascoste dal pannello layout --- */
+function editHTML(t){
+  const flds = LANGS.map(L =>
+    `<div class="fld"><span>${LABEL[L]}${cfg.langs[L]?"":" · nascosta"}</span>
+       <input type="text" data-f="${L}" value="${esc(editBuf[L])}" autocomplete="off"></div>`
+  ).join("");
+  return `<div class="row editing" data-id="${t.id}">
+      <div class="edithead">Modifica voce</div>
+      <div class="flds">${flds}</div>
+      <div class="fld"><span>Nota</span>
+        <input type="text" data-f="note" value="${esc(editBuf.note)}" autocomplete="off"></div>
+      <div class="editact">
+        <button class="btn" data-act="save">Salva <span style="color:var(--dim)">↵</span></button>
+        <button class="btn" data-act="cancel">Annulla <span style="color:var(--dim)">Esc</span></button>
+        <div class="spacer"></div>
+        <button class="btn danger" data-act="del">Elimina voce</button>
+      </div>
+    </div>`;
+}
+
+function render(){
+  const g = active();
+  const needle = q.value.trim();
+  const n = norm(needle);
+
+  const vis = visLangs();
+  const match = n
+    ? g.terms.filter(t => vis.some(L => norm(t[L]).includes(n)) || norm(t.note).includes(n))
+    : g.terms;
+
+  const pinned = match.filter(t => t.pinned);
+  const rest   = match.filter(t => !t.pinned);
+
+  let html = "";
+  if(pinned.length) html += `<div class="sechead">Fissati</div>` + pinned.map(t => rowHTML(t,needle)).join("");
+  if(rest.length){
+    if(pinned.length) html += `<div class="sechead">${needle ? "Altri risultati" : "Glossario"}</div>`;
+    html += rest.map(t => rowHTML(t,needle)).join("");
+  }
+  if(!match.length){
+    html = g.terms.length
+      ? `<div class="empty-state">Nessun risultato per «${esc(needle)}».<br><br>
+           Premi <kbd>Ctrl</kbd>+<kbd>Invio</kbd> per aggiungerlo al volo come termine IT.</div>`
+      : `<div class="empty-state">Glossario vuoto.<br><br>
+           <b>Importa</b> incolla un foglio di calcolo · <b>+ termine</b> aggiunge a mano<br><br>
+           <kbd>/</kbd> cerca · <kbd>Ctrl</kbd>+<kbd>Invio</kbd> aggiungi · <kbd>Esc</kbd> pulisci</div>`;
+  }
+  out.innerHTML = html;
+
+  document.getElementById("count").textContent =
+    needle ? `${match.length} / ${g.terms.length}` : `${g.terms.length} termini`;
+}
+
+function renderSelect(){
+  const s = document.getElementById("gsel");
+  s.innerHTML = db.glossaries
+    .map(g => `<option value="${g.id}"${g.id===db.active?" selected":""}>${esc(g.name)} (${g.terms.length})</option>`)
+    .join("");
+}
+function refresh(){ renderSelect(); render(); save(); }
+
+/* ---------- eventi ---------- */
+// cercare mentre una voce è aperta chiuderebbe la riga sotto le dita:
+// meglio chiudere la modifica in modo esplicito e prevedibile
+q.addEventListener("input", () => { editId = null; render(); });
+
+/* --- modifica voce --- */
+function startEdit(id){
+  const t = active().terms.find(x => x.id === id);
+  if(!t) return;
+  editId = id;
+  LANGS.forEach(L => editBuf[L] = t[L] || "");
+  editBuf.note = t.note || "";
+  render();
+  const first = out.querySelector('.row.editing input[data-f]');
+  if(first){ first.focus(); first.select(); }
+}
+function cancelEdit(){ editId = null; render(); q.focus(); }
+
+function commitEdit(){
+  const t = active().terms.find(x => x.id === editId);
+  if(!t){ cancelEdit(); return; }
+  if(!LANGS.some(L => editBuf[L].trim())){
+    alert("La voce resterebbe senza nessuna lingua.\nCompilane almeno una, oppure usa «Elimina voce».");
+    return;
+  }
+  LANGS.forEach(L => t[L] = editBuf[L].trim());
+  t.note = editBuf.note.trim();
+  editId = null;
+  refresh(); q.focus();
+}
+
+function deleteEdit(){
+  const g = active();
+  const t = g.terms.find(x => x.id === editId);
+  if(!t){ cancelEdit(); return; }
+  const etichetta = LANGS.map(L => t[L]).filter(Boolean)[0] || "questa voce";
+  if(!confirm(`Eliminare «${etichetta}»?\nL'operazione non è annullabile.`)) return;
+  g.terms = g.terms.filter(x => x.id !== editId);
+  editId = null;
+  refresh(); q.focus();
+}
+
+out.addEventListener("click", e => {
+  const ed = e.target.closest("[data-edit]");
+  if(ed){ startEdit(ed.dataset.edit); return; }
+
+  const act = e.target.closest("[data-act]");
+  if(act){
+    const a = act.dataset.act;
+    if(a === "save")   commitEdit();
+    if(a === "cancel") cancelEdit();
+    if(a === "del")    deleteEdit();
+    return;
+  }
+
+  const b = e.target.closest("[data-pin]");
+  if(!b) return;
+  const t = active().terms.find(x => x.id === b.dataset.pin);
+  if(t){ t.pinned = !t.pinned; refresh(); }
+});
+
+/* i campi aggiornano il buffer senza ridisegnare: il fuoco resta dov'è */
+out.addEventListener("input", e => {
+  const f = e.target.closest("[data-f]");
+  if(f) editBuf[f.dataset.f] = f.value;
+});
+
+out.addEventListener("keydown", e => {
+  if(!editId) return;
+  if(e.key === "Enter"){ e.preventDefault(); commitEdit(); }
+});
+
+document.getElementById("gsel").addEventListener("change", e => {
+  editId = null;
+  db.active = e.target.value; q.value = ""; refresh(); q.focus();
+});
+
+/* --- scorciatoie globali --- */
+document.addEventListener("keydown", e => {
+  const inField = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+
+  if(e.key === "/" && !inField){ e.preventDefault(); q.focus(); q.select(); return; }
+
+  if(e.key === "Escape"){
+    if(editId){ cancelEdit(); return; }
+    if(!document.getElementById("pAdd").hidden){ closeAdd(); return; }
+    if(!document.getElementById("pImp").hidden){ document.getElementById("pImp").hidden = true; q.focus(); return; }
+    if(!document.getElementById("pSet").hidden){ document.getElementById("pSet").hidden = true; q.focus(); return; }
+    if(!document.getElementById("pBak").hidden){ document.getElementById("pBak").hidden = true; q.focus(); return; }
+    q.value = ""; render(); q.focus(); return;
+  }
+
+  // Ctrl+Invio dal campo ricerca: apre l'aggiunta rapida precompilata
+  if(e.key === "Enter" && (e.ctrlKey||e.metaKey) && e.target === q){
+    e.preventDefault(); openAdd(q.value.trim()); return;
+  }
+});
+
+/* --- aggiunta rapida --- */
+const pAdd = document.getElementById("pAdd");
+function openAdd(prefillIt){
+  pAdd.hidden = false;
+  document.getElementById("pImp").hidden = true;
+  document.getElementById("pBak").hidden = true;
+  LANGS.forEach(L => document.getElementById("a_"+L).value = "");
+  document.getElementById("a_note").value = "";
+  document.getElementById("aMsg").textContent = "";
+  if(prefillIt) document.getElementById("a_it").value = prefillIt;
+  document.getElementById(prefillIt ? "a_pt" : "a_it").focus();
+}
+function closeAdd(){ pAdd.hidden = true; q.focus(); }
+
+function saveTerm(){
+  const t = {id:uid(), pinned:false, note:document.getElementById("a_note").value.trim()};
+  LANGS.forEach(L => t[L] = document.getElementById("a_"+L).value.trim());
+  if(!LANGS.some(L => t[L])){
+    const m = document.getElementById("aMsg"); m.className = "msg err";
+    m.textContent = "Serve almeno una lingua."; return;
+  }
+  active().terms.unshift(t);
+  refresh();
+  const m = document.getElementById("aMsg"); m.className = "msg";
+  m.textContent = "Salvato ✓";
+  LANGS.forEach(L => document.getElementById("a_"+L).value = "");
+  document.getElementById("a_note").value = "";
+  document.getElementById("a_it").focus();
+}
+
+document.getElementById("bAdd").addEventListener("click", () => openAdd(""));
+document.getElementById("aSave").addEventListener("click", saveTerm);
+document.getElementById("aClose").addEventListener("click", closeAdd);
+pAdd.addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); saveTerm(); }
+});
+
+/* --- import --- */
+const pImp = document.getElementById("pImp");
+document.getElementById("bImp").addEventListener("click", () => {
+  pImp.hidden = !pImp.hidden; pAdd.hidden = true; pBak.hidden = true;
+  if(!pImp.hidden) document.getElementById("impTxt").focus();
+});
+document.getElementById("impClose").addEventListener("click", () => { pImp.hidden = true; q.focus(); });
+
+function doImport(intoNew){
+  const txt = document.getElementById("impTxt").value;
+  const m = document.getElementById("impMsg");
+  if(!txt.trim()){ m.className = "msg err"; m.textContent = "Niente da importare."; return; }
+
+  let rows = parseTable(txt);
+  if(rows.length && looksLikeHeader(rows[0])) rows = rows.slice(1);
+
+  const terms = rows.map(r => {
+    const t = {id:uid(), pinned:false, note:(r[4]||"").trim()};
+    LANGS.forEach((L,i) => t[L] = (r[i]||"").trim());
+    return t;
+  }).filter(t => LANGS.some(L => t[L]));
+
+  if(!terms.length){ m.className = "msg err"; m.textContent = "Nessuna riga valida."; return; }
+
+  if(intoNew){
+    const name = prompt("Nome del nuovo glossario:", "Importato");
+    if(name === null) return;
+    const g = {id:uid(), name:(name.trim()||"Importato"), terms};
+    db.glossaries.push(g); db.active = g.id;
+  } else {
+    active().terms.push(...terms);
+  }
+  document.getElementById("impTxt").value = "";
+  m.className = "msg"; m.textContent = `${terms.length} termini importati ✓`;
+  refresh();
+}
+document.getElementById("impGo").addEventListener("click", () => doImport(false));
+document.getElementById("impNew").addEventListener("click", () => doImport(true));
+
+/* --- gestione glossari --- */
+document.getElementById("bNew").addEventListener("click", () => {
+  const name = prompt("Nome del nuovo glossario:", "");
+  if(name === null) return;
+  const g = {id:uid(), name:(name.trim()||"Senza nome"), terms:[]};
+  db.glossaries.push(g); db.active = g.id; q.value = ""; refresh(); q.focus();
+});
+
+document.getElementById("bDel").addEventListener("click", () => {
+  const g = active();
+  if(db.glossaries.length === 1){ alert("È l'ultimo glossario: non posso eliminarlo."); return; }
+  if(!confirm(`Eliminare «${g.name}» e i suoi ${g.terms.length} termini?\nEsporta prima, se ti servono.`)) return;
+  db.glossaries = db.glossaries.filter(x => x.id !== g.id);
+  db.active = db.glossaries[0].id;
+  refresh();
+});
+
+/* --- export CSV --- */
+document.getElementById("bExp").addEventListener("click", () => {
+  const g = active();
+  const cq = s => `"${(s||"").replace(/"/g,'""')}"`;
+  const csv = ["Italiano,Português,English,Español,Nota"]
+    .concat(g.terms.map(t => LANGS.map(L => cq(t[L])).concat(cq(t.note)).join(",")))
+    .join("\r\n");
+  const url = URL.createObjectURL(new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8"}));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = g.name.replace(/[^\w\-À-ÿ ]+/g,"_") + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* --- backup completo (JSON): PC <-> telefono --- */
+const pBak = document.getElementById("pBak");
+const bakMsg = document.getElementById("bakMsg");
+let bakMode = "merge";
+
+document.getElementById("bBak").addEventListener("click", () => {
+  pBak.hidden = !pBak.hidden;
+  pAdd.hidden = true; pImp.hidden = true; pSet.hidden = true;
+  bakMsg.textContent = "";
+});
+document.getElementById("bakClose").addEventListener("click", () => { pBak.hidden = true; q.focus(); });
+
+function bakName(){
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  return `cabina-backup-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+}
+
+document.getElementById("bakExp").addEventListener("click", async () => {
+  const json = JSON.stringify({app:"cabina-glossari", version:1, exported:new Date().toISOString(), data:db});
+  const name = bakName();
+  const file = new File([json], name, {type:"application/json"});
+  // sul telefono il foglio di condivisione (WhatsApp, Mail, File, Drive) è più comodo del download
+  if(matchMedia("(pointer:coarse)").matches && navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:name}); bakMsg.className = "msg"; bakMsg.textContent = "Backup condiviso ✓"; return; }
+    catch(e){ if(e && e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  bakMsg.className = "msg"; bakMsg.textContent = "Backup esportato ✓";
+});
+
+function pickBackup(mode){ bakMode = mode; const f = document.getElementById("bakFile"); f.value = ""; f.click(); }
+document.getElementById("bakMerge").addEventListener("click", () => pickBackup("merge"));
+document.getElementById("bakReplace").addEventListener("click", () => pickBackup("replace"));
+
+// accetta il backup di questa pagina, il glossari.json dell'app desktop o i dati nudi
+function readBackup(obj){
+  if(obj && obj.data && Array.isArray(obj.data.glossaries)) return obj.data;
+  if(obj && Array.isArray(obj.glossaries)) return obj;
+  if(obj && typeof obj[KEY] === "string") return JSON.parse(obj[KEY]);
+  return null;
+}
+
+document.getElementById("bakFile").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  let inc;
+  try{ inc = readBackup(JSON.parse(await f.text())); }catch(err){ inc = null; }
+  if(!inc || !Array.isArray(inc.glossaries) || !inc.glossaries.length){
+    bakMsg.className = "msg err"; bakMsg.textContent = "Il file non sembra un backup di Cabina."; return;
+  }
+  const nTerms = inc.glossaries.reduce((s,g) => s + (g.terms||[]).length, 0);
+  if(bakMode === "replace"){
+    if(!confirm(`Sostituire TUTTO quello che c'è qui con ${inc.glossaries.length} glossari (${nTerms} voci)?`)) return;
+    db = {active: inc.active, glossaries: inc.glossaries};
+    if(!db.glossaries.some(g => g.id === db.active)) db.active = db.glossaries[0].id;
+  } else {
+    let upd = 0, add = 0;
+    inc.glossaries.forEach(g => {
+      const i = db.glossaries.findIndex(x => x.id === g.id);
+      if(i >= 0){ db.glossaries[i] = g; upd++; } else { db.glossaries.push(g); add++; }
+    });
+    // il glossario vuoto di partenza non serve più
+    db.glossaries = db.glossaries.filter(g => !(g.id === "g1" && !g.terms.length && db.glossaries.length > 1));
+    if(inc.active && db.glossaries.some(g => g.id === inc.active)) db.active = inc.active;
+    if(!db.glossaries.some(g => g.id === db.active)) db.active = db.glossaries[0].id;
+    bakMsg.className = "msg"; bakMsg.textContent = `${upd} aggiornati, ${add} aggiunti ✓`;
+  }
+  if(bakMode === "replace"){ bakMsg.className = "msg"; bakMsg.textContent = `${inc.glossaries.length} glossari caricati ✓`; }
+  editId = null; q.value = "";
+  refresh();
+});
+
+/* --- pannello layout --- */
+const pSet = document.getElementById("pSet");
+
+function syncControls(){
+  document.getElementById("sQ").value  = cfg.q;
+  document.getElementById("sFs").value = cfg.fs;
+  document.getElementById("sRp").value = cfg.rowpad;
+  document.getElementById("vQ").textContent  = (cfg.q/10).toFixed(1);
+  document.getElementById("vFs").textContent = cfg.fs;
+  document.getElementById("vRp").textContent = cfg.rowpad;
+  document.getElementById("cLab").classList.toggle("on", cfg.labels);
+  document.getElementById("langChips").innerHTML = LANGS
+    .map(L => `<button class="chip${cfg.langs[L]?" on":""}" data-lang="${L}">${LABEL[L]}</button>`)
+    .join("");
+}
+
+// applica + ridisegna (il rendering dipende dalle lingue visibili)
+function updateCfg(){ applyCfg(); syncControls(); render(); }
+
+document.getElementById("bSet").addEventListener("click", () => {
+  pSet.hidden = !pSet.hidden;
+  pAdd.hidden = true; pImp.hidden = true; pBak.hidden = true;
+  if(!pSet.hidden) syncControls();
+});
+document.getElementById("setClose").addEventListener("click", () => { pSet.hidden = true; q.focus(); });
+
+document.getElementById("sQ").addEventListener("input",  e => { cfg.q      = +e.target.value; updateCfg(); });
+document.getElementById("sFs").addEventListener("input", e => { cfg.fs     = +e.target.value; updateCfg(); });
+document.getElementById("sRp").addEventListener("input", e => { cfg.rowpad = +e.target.value; updateCfg(); });
+
+document.getElementById("cLab").addEventListener("click", () => { cfg.labels = !cfg.labels; updateCfg(); });
+
+document.getElementById("langChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-lang]");
+  if(!b) return;
+  const L = b.dataset.lang, on = cfg.langs[L];
+  if(on && visLangs().length === 1) return;   // mai spegnere l'ultima
+  cfg.langs[L] = !on;
+  updateCfg();
+});
+
+document.getElementById("setReset").addEventListener("click", () => {
+  cfg = JSON.parse(JSON.stringify(DEFAULTS));
+  updateCfg();
+});
+
+// A+/A− restano come scorciatoia rapida in cabina
+document.getElementById("bBig").addEventListener("click", () => {
+  cfg.fs = Math.min(28, cfg.fs + 2); updateCfg();
+});
+document.getElementById("bSml").addEventListener("click", () => {
+  cfg.fs = Math.max(13, cfg.fs - 2); updateCfg();
+});
+
+/* --- integrazione app desktop (Electron) --- */
+if(typeof window !== "undefined" && window.__cabinaApp && window.__cabinaApp.isDesktop){
+  const bDir = document.getElementById("bDir");
+  bDir.hidden = false;
+  bDir.addEventListener("click", () => window.__cabinaApp.openDataDir());
+}
+
+/* --- app installabile (PWA): solo se servita da un sito, mai da file o da Electron --- */
+const isWeb = /^https?:$/.test(location.protocol) && !(window.__cabinaApp && window.__cabinaApp.isDesktop);
+if(isWeb){
+  const head = document.head;
+  const add = (tag, attrs) => { const el = document.createElement(tag); Object.assign(el, attrs); head.appendChild(el); };
+  add("link", {rel:"manifest", href:"manifest.webmanifest"});
+  add("link", {rel:"apple-touch-icon", href:"icon-180.png"});
+  add("meta", {name:"apple-mobile-web-app-capable", content:"yes"});
+  add("meta", {name:"mobile-web-app-capable", content:"yes"});
+  add("meta", {name:"apple-mobile-web-app-status-bar-style", content:"black-translucent"});
+  add("meta", {name:"apple-mobile-web-app-title", content:"Cabina"});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  // chiede al browser di non cancellare i glossari quando manca spazio
+  if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+// sul telefono la scorciatoia "/" non esiste e la tastiera non va aperta da sola
+const touch = matchMedia("(pointer:coarse)").matches;
+if(touch) q.placeholder = "Cerca in tutte le lingue…";
+
+/* --- avvio --- */
+applyCfg();
+syncControls();
+refresh();
+if(!touch) q.focus();
+// avvio concluso: da ora in poi le modifiche si salvano normalmente
+booting = false;
+</script>
+</body>
+</html>
